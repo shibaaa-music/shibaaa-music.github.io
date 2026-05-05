@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Bảng màu Cappuccino Mocha */
+            --bg-color: #4a362a; 
+            --on-surface: #fff3e8; 
+            --on-surface-variant: rgba(255, 243, 232, 0.7); 
+            --primary-container: #d7b59e; 
+            --on-primary-container: #2d1e15; 
+            --secondary-container: rgba(215, 181, 158, 0.15); 
+        }
+
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #2a1f1a; 
+        }
+
+        /* Nới chiều cao lên 600px để các thành phần không bị ép vào nhau */
+        .phone-mockup {
+            width: 270px;
+            height: 600px; 
+            background-color: var(--bg-color);
+            border-radius: 30px;
+            padding: 30px 18px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            position: relative;
+        }
+
+        .loading { 
+            font-family: 'Google Sans', sans-serif;
+            font-size: 15px; 
+            color: var(--on-surface-variant); 
+            text-align: center;
+            height: 18px; 
+            margin-bottom: 3px;
+        }
+
+        /* Album Art: Đã khóa tỷ lệ, đảm bảo tròn xoe 100% */
+        .album-art {
+            width: 100%;
+            aspect-ratio: 1/1;
+            flex-shrink: 0; /* Lệnh quan trọng chống bị bóp dẹp thành elip */
+            border-radius: 50%;
+            overflow: hidden;
+            margin-bottom: 36px;
+            background-color: #333;
+            border: 4px solid var(--primary-container);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            box-sizing: border-box;
+            
+            animation: spin 8s linear infinite;
+            animation-play-state: paused; 
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .album-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .info-container {
+            text-align: left;
+            padding-left: 6px;
+        }
+
+        .song-title {
+            font-family: 'Google Sans', sans-serif;
+            font-size: 21px;
+            font-weight: 500;
+            color: var(--on-surface);
+            margin: 0;
+            letter-spacing: 0.15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .artist-name {
+            font-family: 'Google Sans', sans-serif;
+            font-size: 16px;
+            color: var(--on-surface-variant);
+            margin: 6px 0 30px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .progress-section {
+            margin-bottom: 30px;
+            padding: 0 6px;
+        }
+
+        .progress-bar-container {
+            position: relative;
+            width: 100%;
+            height: 18px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 3px;
+            background-color: rgba(255, 243, 232, 0.2);
+            border-radius: 2px;
+            position: absolute;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 3px;
+            background-color: var(--primary-container);
+            border-radius: 2px;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .progress-thumb {
+            width: 12px;
+            height: 12px;
+            background-color: var(--primary-container);
+            border-radius: 50%;
+            position: absolute;
+            left: 0%;
+            transform: translateX(-50%);
+            pointer-events: none;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        .time-labels {
+            display: flex;
+            justify-content: space-between;
+            color: var(--on-surface-variant);
+            font-family: 'Google Sans', sans-serif;
+            font-size: 15px;
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-bottom: 15px;
+        }
+
+        .btn {
+            border: none;
+            outline: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        .btn-secondary {
+            width: 66px;
+            height: 66px;
+            border-radius: 50%;
+            background-color: var(--secondary-container);
+            color: var(--primary-container);
+        }
+
+        .btn-main {
+            width: 81px;
+            height: 81px;
+            border-radius: 24px;
+            background-color: var(--primary-container);
+            color: var(--on-primary-container);
+        }
+
+        .btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: scale(0.92);
+            filter: brightness(0.9);
+        }
+
+        svg { fill: currentColor; }
+
+        #audioPlayer { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="phone-mockup">
+        <div class="loading" id="loadingText">Đang tải thông tin...</div>
+
+        <div class="album-art" id="albumArtContainer">
+            <img id="coverImage" src="https://github.com/shibaaa204.png" alt="Album Cover">
+        </div>
+
+        <div class="info-container">
+            <h1 class="song-title" id="trackTitle">Chưa rõ tên bài</h1>
+            <p class="artist-name" id="trackArtist">Chưa rõ ca sĩ</p>
+        </div>
+
+        <div class="progress-section">
+            <div class="progress-bar-container" id="seekRect">
+                <div class="progress-track"></div>
+                <div class="progress-fill" id="progressFill"></div>
+                <div class="progress-thumb" id="progressThumb"></div>
+            </div>
+            
+            <div class="time-labels">
+                <span id="currentTime">00:00</span>
+                <span id="totalTime">00:00</span>
+            </div>
+        </div>
+
+        <div class="controls-row">
+            <button class="btn btn-secondary" id="prevBtn" title="Bài trước">
+                <svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+            </button>
+            
+            <button class="btn btn-main" id="playPauseBtn">
+                <div id="iconContainer">
+                    <svg width="30" height="30" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+            </button>
+
+            <button class="btn btn-secondary" id="nextBtn" title="Bài tiếp">
+                <svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+            </button>
+        </div>
+
+        <audio id="audioPlayer">
+            <source id="audioSource" src="https://shibaaa-music.github.io/music/1.m4a" type="audio/mp4">
+        </audio>
+    </div>
+
+    <script>
+        const jsmediatags = window.jsmediatags;
+        const baseUrl = "https://shibaaa-music.github.io/music/";
+        const defaultCover = "https://github.com/shibaaa204.png";
+
+        const totalSongs = 100; 
+        let currentSong = 1;
+
+        const coverImage = document.getElementById('coverImage');
+        const trackTitle = document.getElementById('trackTitle');
+        const trackArtist = document.getElementById('trackArtist');
+        const loadingText = document.getElementById('loadingText');
+        const albumArtContainer = document.getElementById('albumArtContainer'); 
+        
+        const audio = document.getElementById('audioPlayer');
+        const audioSource = document.getElementById('audioSource');
+        
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const iconContainer = document.getElementById('iconContainer');
+        const currentTimeEl = document.getElementById('currentTime');
+        const totalTimeEl = document.getElementById('totalTime');
+
+        const seekRect = document.getElementById('seekRect');
+        const progressFill = document.getElementById('progressFill');
+        const progressThumb = document.getElementById('progressThumb');
+
+        const pauseIcon = `<svg width="30" height="30" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
+        const playIcon = `<svg width="30" height="30" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
+
+        function updatePlayPauseUI() {
+            if (audio.paused) {
+                iconContainer.innerHTML = playIcon;
+                albumArtContainer.style.animationPlayState = 'paused'; 
+            } else {
+                iconContainer.innerHTML = pauseIcon;
+                albumArtContainer.style.animationPlayState = 'running'; 
+            }
+        }
+        audio.addEventListener('play', updatePlayPauseUI);
+        audio.addEventListener('pause', updatePlayPauseUI);
+
+        playPauseBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+            } else {
+                audio.pause();
+            }
+            playPauseBtn.style.transform = 'scale(0.95)';
+            setTimeout(() => playPauseBtn.style.transform = 'scale(1)', 100);
+        });
+
+        function formatTime(seconds) {
+            if (isNaN(seconds) || !isFinite(seconds)) return "00:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+        }
+
+        audio.addEventListener('timeupdate', () => {
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+            if(audio.duration) {
+                const percent = (audio.currentTime / audio.duration) * 100;
+                progressFill.style.width = percent + '%';
+                progressThumb.style.left = percent + '%';
+            }
+        });
+
+        audio.addEventListener('loadedmetadata', () => {
+            totalTimeEl.textContent = formatTime(audio.duration);
+        });
+
+        seekRect.addEventListener('click', (e) => {
+            const rect = seekRect.getBoundingClientRect();
+            let clickX = e.clientX - rect.left;
+            if (clickX < 0) clickX = 0;
+            if (clickX > rect.width) clickX = rect.width;
+
+            const percent = clickX / rect.width;
+            if(audio.duration) {
+                audio.currentTime = percent * audio.duration;
+            }
+        });
+
+        function fetchMetadata(url) {
+            loadingText.style.visibility = 'visible';
+            loadingText.textContent = "Đang tải thông tin bài hát...";
+            
+            jsmediatags.read(url, {
+                onSuccess: function(tag) {
+                    loadingText.style.visibility = 'hidden';
+                    const tags = tag.tags;
+
+                    trackTitle.textContent = tags.title ? tags.title : `Bài hát số ${currentSong}`;
+                    trackArtist.textContent = tags.artist ? tags.artist : "Chưa rõ ca sĩ";
+
+                    if (tags.picture) {
+                        let base64String = "";
+                        const data = tags.picture.data;
+                        for (let i = 0; i < data.length; i++) {
+                            base64String += String.fromCharCode(data[i]);
+                        }
+                        const base64 = "data:" + tags.picture.format + ";base64," + window.btoa(base64String);
+                        coverImage.src = base64;
+                    } else {
+                        coverImage.src = defaultCover;
+                    }
+                },
+                onError: function(error) {
+                    loadingText.style.visibility = 'hidden';
+                    trackTitle.textContent = `Bài hát số ${currentSong}`;
+                    trackArtist.textContent = "Chưa rõ ca sĩ";
+                    coverImage.src = defaultCover;
+                }
+            });
+        }
+
+        function loadAndPlaySong(songNumber) {
+            const newUrl = `${baseUrl}${songNumber}.m4a`;
+            audioSource.src = newUrl;
+            
+            progressFill.style.width = '0%';
+            progressThumb.style.left = '0%';
+            currentTimeEl.textContent = "00:00";
+            
+            audio.load(); 
+            fetchMetadata(newUrl);
+            
+            audio.play().catch(e => console.log("Cần tương tác người dùng để autoplay"));
+        }
+
+        fetchMetadata(`${baseUrl}${currentSong}.m4a`);
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            currentSong++;
+            if (currentSong > totalSongs) currentSong = 1; 
+            loadAndPlaySong(currentSong);
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            currentSong--;
+            if (currentSong < 1) currentSong = totalSongs; 
+            loadAndPlaySong(currentSong);
+        });
+
+        audio.addEventListener('ended', () => {
+            currentSong++;
+            if (currentSong > totalSongs) currentSong = 1;
+            loadAndPlaySong(currentSong);
+        });
+
+    </script>
+</body>
+</html>
