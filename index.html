@@ -248,7 +248,7 @@
         </div>
 
         <audio id="audioPlayer">
-            <source id="audioSource" src="https://shibaaa-music.github.io/music/1.m4a" type="audio/mp4">
+            <source id="audioSource" src="" type="audio/mp4">
         </audio>
     </div>
 
@@ -384,8 +384,10 @@
             audio.play().catch(e => console.log("Cần tương tác người dùng để autoplay"));
         }
 
-        fetchMetadata(`${baseUrl}${currentSong}.m4a`);
-
+		audioSource.src = `${baseUrl}${currentSong}.m4a`;
+		audio.load();
+		fetchMetadata(`${baseUrl}${currentSong}.m4a`);
+		
         document.getElementById('nextBtn').addEventListener('click', () => {
             currentSong++;
             if (currentSong > totalSongs) currentSong = 1; 
