@@ -258,7 +258,9 @@
         const defaultCover = "https://github.com/shibaaa204.png";
 
         const totalSongs = 100; 
-        let currentSong = 1;
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentSong = parseInt(urlParams.get('song')) || 1;
+        if (currentSong < 1 || currentSong > totalSongs) currentSong = 1;
 
         const coverImage = document.getElementById('coverImage');
         const trackTitle = document.getElementById('trackTitle');
